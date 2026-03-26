@@ -7,16 +7,33 @@ const ALLOWED_FIELDS = ["name", "email", "age"];
 const createUser = async (req, res, next) => {
   try {
     const { error } = createUserSchema.validate(req.body);
-
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
-
     const safeData = pick(req.body, ALLOWED_FIELDS);
-
     const user = await userService.createUser(safeData);
-
     res.status(201).json(user);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getUsers = async (req, res, next) => {
+  try {
+    const users = await userService.getUsers();
+    res.status(200).json(users);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getUser = async (req, res, next) => {
+  try {
+    const user = await userService.getUserById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
   } catch (err) {
     next(err);
   }
@@ -25,20 +42,27 @@ const createUser = async (req, res, next) => {
 const updateUser = async (req, res, next) => {
   try {
     const { error } = updateUserSchema.validate(req.body);
-
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
-
     const safeData = pick(req.body, ALLOWED_FIELDS);
-
     const user = await userService.updateUser(req.params.id, safeData);
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    res.status(200).json(user);
+  } catch (err) {
+    next(err);
+  }
+};
 
-    res.json(user);
+const deleteUser = async (req, res, next) => {
+  try {
+    const user = await userService.deleteUser(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ message: "User deleted successfully" });
   } catch (err) {
     next(err);
   }
@@ -46,5 +70,8 @@ const updateUser = async (req, res, next) => {
 
 module.exports = {
   createUser,
-  updateUser
+  getUsers,
+  getUser,
+  updateUser,
+  deleteUser,
 };
